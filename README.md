@@ -1,83 +1,74 @@
 # Activout.MemberData
 
-Download your own LinkedIn data through LinkedIn's official
-[Member Data Portability (Member) API](https://learn.microsoft.com/en-us/linkedin/dma/member-data-portability/member-data-portability-member/),
-keep it in a local SQLite database, and query it from scripts or coding agents such as Claude Code and Codex.
+`member` downloads your own LinkedIn data (connections, messages, invitations, positions, skills and more) to your
+computer through LinkedIn's official
+[Member Data Portability API](https://learn.microsoft.com/en-us/linkedin/dma/member-data-portability/member-data-portability-member/).
+You can then search it yourself, or let an AI agent such as Claude Code or Codex answer questions about it.
 
-- **Activout.MemberData** is a .NET 10 library: typed HTTP access to the Member Snapshot, Member Changelog and
-  Member Authorization APIs, with raw JSON preserved and no database dependency.
-- **Activout.MemberData.Cli** is the `member` command: secure token storage, sync into SQLite, JSON output and
-  read-only SQL.
+It only reads. It never changes your LinkedIn account and never asks for your LinkedIn password. It works only for
+**LinkedIn members in the EEA and Switzerland**. This project is independent and **not affiliated with or endorsed
+by LinkedIn**.
+
+## Get started
+
+### 1. Download
+
+Get the file for your computer from the [latest release](https://github.com/activout/Activout.MemberData/releases/latest).
+The files are not code signed yet, so your computer warns you the first time.
+
+- **Windows:** download `member-win-x64.exe`, rename it to `member.exe` and open PowerShell in that folder. If
+  Windows says "Windows protected your PC", click **More info**, then **Run anyway**. Type `.\member.exe` where the
+  steps below say `member`.
+- **Mac (M1 or newer):** download `member-osx-arm64.tar.gz`, then in Terminal:
+  ```sh
+  cd ~/Downloads
+  tar -xzf member-osx-arm64.tar.gz
+  xattr -d com.apple.quarantine member
+  sudo mv member /usr/local/bin/
+  ```
+- **Linux:** download `member-linux-x64.tar.gz`, run `tar -xzf member-linux-x64.tar.gz` and move `member` to a folder
+  on your `PATH`.
+
+`member` runs in a terminal. Double-clicking it only flashes a window.
+
+### 2. Get a LinkedIn token
+
+LinkedIn hands out this data only to a developer app of your own. Creating one is free and takes about ten minutes:
+follow [docs/dma-setup.md](docs/dma-setup.md). You end up with a long access token.
+
+### 3. Store the token
 
 ```sh
-member auth import-token          # paste the token from LinkedIn's OAuth Token Generator (hidden input)
-member sync                       # changelog every time, snapshot when needed
-member domains list
+member auth import-token --expires-in-days 365
+```
+
+Paste the token at the prompt. It is hidden while you paste, checked with LinkedIn, and stored in your computer's
+keychain. Never paste it anywhere else, including chats and AI agents. On a Mac, choose **Always Allow** if asked
+whether `member` may use the keychain item.
+
+### 4. Download your data
+
+```sh
+member sync
+```
+
+The first run takes about a minute. Run `member sync` again at least once a week: LinkedIn keeps recent activity
+(likes, comments, messages) for only 28 days.
+
+### 5. Look at it
+
+```sh
+member domains list                              # what kinds of data you have
 member data list --domain CONNECTIONS --limit 20
-member data query "SELECT domain, count(*) AS n FROM snapshot_records WHERE deleted_at IS NULL GROUP BY domain"
+member skill install                             # let Claude Code, Codex and others answer questions about it
 ```
 
-It only reads. It never changes your LinkedIn account, never scrapes, and never asks for your LinkedIn password.
-This project is independent and **not affiliated with or endorsed by LinkedIn**.
+Then ask your agent, for example "Who do I know at Spotify?". Remember that an agent sends what it reads to its
+model provider, and your data includes messages and information about other people.
 
-## Who can use it
+That's all most people need. The rest of this page is reference.
 
-The Member Data Portability (Member) product exists because of the EU Digital Markets Act. It is available only to
-**LinkedIn members in the EEA and Switzerland**, and each person needs **their own** LinkedIn developer application.
-Setting that up takes about ten minutes; [docs/dma-setup.md](docs/dma-setup.md) walks through it.
-
-## Install
-
-### Download a ready-made program (no .NET needed)
-
-Get the file for your computer from the [latest release](https://github.com/activout/Activout.MemberData/releases/latest):
-
-| Computer | File |
-| --- | --- |
-| Windows (64-bit Intel/AMD) | `member-win-x64.exe` |
-| Mac with Apple silicon (M1 or newer) | `member-osx-arm64.tar.gz` |
-| Linux (64-bit Intel/AMD) | `member-linux-x64.tar.gz` |
-
-`member` is a command-line program: run it from a terminal (Windows Terminal, PowerShell, macOS Terminal).
-Double-clicking it only flashes a window.
-
-The files are **not code signed** yet, so the operating system warns the first time:
-
-- **Windows:** rename the file to `member.exe` and put it in a folder of your choice. If SmartScreen says "Windows
-  protected your PC", click **More info**, then **Run anyway**. Run it as `.\member.exe --help` in PowerShell.
-- **macOS:** `tar -xzf member-osx-arm64.tar.gz`, then `xattr -d com.apple.quarantine member` (this removes the
-  "cannot be opened because the developer cannot be verified" block), then `./member --help`. Move it to a folder on
-  your `PATH`, for example `sudo mv member /usr/local/bin/`. macOS may ask once whether `member` may use the
-  keychain item it stored; choose **Always Allow**.
-- **Linux:** `tar -xzf member-linux-x64.tar.gz && ./member --help`.
-
-Each release has a `SHA256SUMS` file and a build provenance attestation: `gh attestation verify <file> -R
-activout/Activout.MemberData`.
-
-### As a .NET tool
-
-With the [.NET 10 SDK](https://dotnet.microsoft.com/download):
-
-```sh
-dotnet tool install --global Activout.MemberData.Cli
-```
-
-## Quick start
-
-1. Create your LinkedIn developer app and generate a token ([docs/dma-setup.md](docs/dma-setup.md)).
-2. Store the token in your operating system's secure store. It is read from a hidden prompt or stdin, never from
-   command arguments:
-   ```sh
-   member auth import-token --expires-in-days 365  # LinkedIn's DMA tokens last 12 months
-   member auth status
-   ```
-3. Synchronise. The first run downloads every snapshot domain (about a minute for a large account):
-   ```sh
-   member sync
-   member sync status
-   ```
-4. Run `member sync` at least weekly. LinkedIn keeps changelog events (likes, comments, messages and so on) for
-   only **28 days**, and `member` warns you as that limit approaches.
+---
 
 ## Commands
 
@@ -102,11 +93,14 @@ Global options are `--database PATH`, `--format json|table` and `--credential-so
 one JSON document on stdout when stdout is redirected (or with `--format json`), and progress goes to stderr.
 Exit codes are listed in [docs/troubleshooting.md](docs/troubleshooting.md).
 
-## Using it from a coding agent
+```sh
+member data query "SELECT domain, count(*) AS n FROM snapshot_records WHERE deleted_at IS NULL GROUP BY domain"
+```
 
-[`skills/member/SKILL.md`](skills/member/SKILL.md) teaches agents to answer questions about your LinkedIn data with
-`member`: offline first, JSON output, SQL over `snapshot_records`, asking before syncing. The skill is built into
-`member`, so installing it needs no repository checkout:
+## Coding agents
+
+[`skills/member/SKILL.md`](skills/member/SKILL.md) teaches agents to answer questions with `member`: offline first,
+JSON output, SQL over `snapshot_records`, asking before syncing. It is built into `member`:
 
 ```sh
 member skill install                  # both locations below
@@ -125,17 +119,19 @@ Running `member skill install` again after an upgrade updates the skill. It refu
 working on this repository, link instead of installing:
 `ln -s "$PWD/skills/member" ~/.claude/skills/member && ln -s "$PWD/skills/member" ~/.agents/skills/member`.
 
-Your database contains messages and information about other people. An agent that reads it sends what it reads to
-its model provider. Decide which data you let it see, and don't publish what you get back.
+## Verifying a download
+
+Each release has a `SHA256SUMS` file and a build provenance attestation:
+`gh attestation verify <file> -R activout/Activout.MemberData`.
 
 ## Documentation
 
 - [LinkedIn setup](docs/dma-setup.md): developer app, product, scope, token generation
+- [Troubleshooting](docs/troubleshooting.md): exit codes and common errors
 - [API findings](docs/api-findings.md): what the API actually does, verified against a live account
 - [Storage and sync](docs/storage-and-sync.md): tables, record identity, reconciliation, changelog, 28-day gaps
 - [Security and privacy](docs/security-and-privacy.md): secret storage, environment opt-in, data handling
 - [Live testing](docs/live-testing.md): how the real-account test was run, and its results
-- [Troubleshooting](docs/troubleshooting.md): exit codes and common errors
 
 ## Building
 
@@ -149,9 +145,23 @@ dotnet publish src/Activout.MemberData.Cli -c Release -r osx-arm64 --self-contai
 
 ## Releasing
 
-Push a tag such as `v0.1.0` (or `v0.1.0-rc.1` for a prerelease). The Publish workflow tests, packs, builds the three
+Push a tag such as `v1.1.0` (or `v1.1.0-rc.1` for a prerelease). The Publish workflow tests, packs, builds the three
 single-file executables on their own operating systems, attests build provenance, pushes both packages to NuGet.org
 via trusted publishing and creates the GitHub release with the executables and `SHA256SUMS`.
+
+## Other ways to get your data
+
+The download above suits most people. One of these may fit you better:
+
+- **LinkedIn's own export:** no app or token needed. Under **Settings → Data privacy → Get a copy of your data**,
+  LinkedIn emails you a ZIP of CSV files within a day. It suits a one-off copy; `member` suits keeping an up-to-date
+  copy you can query.
+- **[.NET tool](https://www.nuget.org/packages/Activout.MemberData.Cli):** if you have the
+  [.NET 10 SDK](https://dotnet.microsoft.com/download), `dotnet tool install --global Activout.MemberData.Cli` gives
+  the same `member` command, and `dotnet tool update` keeps it current.
+- **[.NET library](https://www.nuget.org/packages/Activout.MemberData):** `dotnet add package Activout.MemberData`
+  gives typed access to the Member Snapshot, Changelog and Authorization APIs with raw JSON preserved and no
+  database, for building your own program.
 
 ## Licence
 
