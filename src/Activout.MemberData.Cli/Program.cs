@@ -31,8 +31,12 @@ public static class Program
         CliEnvironment env, CancellationToken ct = default)
     {
         var app = new App(stdout, stderr, stdin, env);
-        // Bare `member` shows the help instead of a "Required command" error.
-        var parseResult = app.Root.Parse(args.Length == 0 ? ["--help"] : args);
+        // A command group without its subcommand (`member`, `member auth`) shows that group's help instead of a
+        // "Required command was not provided" error.
+        var parseResult = app.Root.Parse(args);
+        if (parseResult.CommandResult.Command is { Action: null, Subcommands.Count: > 0 } &&
+            parseResult.UnmatchedTokens.Count == 0)
+            parseResult = app.Root.Parse([..args, "--help"]);
         if (parseResult.Errors.Count > 0)
         {
             foreach (var error in parseResult.Errors) stderr.WriteLine($"member: {error.Message}");

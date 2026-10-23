@@ -540,14 +540,18 @@ public class CliTests : IDisposable
         Assert.Equal("database", json.GetProperty("error").GetProperty("type").GetString());
     }
 
-    [Fact]
-    public async Task No_arguments_show_help()
+    [Theory]
+    [InlineData(new string[0], "Sync your own LinkedIn")]
+    [InlineData(new[] { "auth" }, "Access token management.")]
+    [InlineData(new[] { "data" }, "Read the local database.")]
+    [InlineData(new[] { "--format", "json", "skill" }, "The agent skill for")]
+    public async Task Command_group_without_subcommand_shows_its_help(string[] args, string description)
     {
-        var (exitCode, _, stdout, stderr) = await MemberRaw();
+        var (exitCode, _, stdout, stderr) = await MemberRaw(args);
 
         Assert.Equal(0, exitCode);
-        Assert.Contains("Usage:", stdout);
-        Assert.Contains("sync", stdout);
+        Assert.Contains(description, stdout);
+        Assert.Contains("[command] [options]", stdout);
         Assert.Equal("", stderr);
     }
 
