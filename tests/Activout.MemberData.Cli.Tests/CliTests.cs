@@ -37,7 +37,7 @@ public class CliTests : IDisposable
             new CliEnvironment
             {
                 Http = http, BaseUrl = Api, Keychain = _keychain, GetEnv = n => _envVars.GetValueOrDefault(n),
-                OutputRedirected = true, InputRedirected = stdin.Length > 0, Time = _time,
+                OutputRedirected = true, InputRedirected = stdin.Length > 0, Time = _time, HomeDirectory = _dir,
             });
         var text = stdout.ToString();
         Assert.DoesNotContain(Token, text);
@@ -547,5 +547,60 @@ public class CliTests : IDisposable
 
         Assert.Equal(2, exitCode);
         Assert.Contains("member --help", stderr);
+    }
+
+    // Skill
+
+    [Fact]
+    public async Task Skill_install_writes_both_targets_idempotently()
+    {
+        var (exitCode, json, _, _) = await Member(null, "skill", "install");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(["created", "created"], json.GetProperty("result").EnumerateArray().Select(r => r.GetProperty("status").GetString()));
+        var claude = Path.Combine(_dir, ".claude", "skills", "member", "SKILL.md");
+        var agents = Path.Combine(_dir, ".agents", "skills", "member", "SKILL.md");
+        Assert.StartsWith("---\nname: member\n", await File.ReadAllTextAsync(claude));
+        Assert.Equal(await File.ReadAllTextAsync(claude), await File.ReadAllTextAsync(agents));
+
+        (_, json, _, _) = await Member(null, "skill", "install");
+        Assert.All(json.GetProperty("result").EnumerateArray(), r => Assert.Equal("unchanged", r.GetProperty("status").GetString()));
+
+        await File.WriteAllTextAsync(claude, "---\nname: member\ndescription: old version\n---\n");
+        (_, json, _, _) = await Member(null, "skill", "install", "--target", "claude");
+        Assert.Equal("updated", json.GetProperty("result")[0].GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Skill_install_does_not_overwrite_a_foreign_skill_without_force()
+    {
+        var path = Path.Combine(_dir, "custom", "member", "SKILL.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, "---\nname: someone-elses-skill\n---\n");
+
+        var (exitCode, _, _, _) = await Member(null, "skill", "install", "--dir", Path.Combine(_dir, "custom"));
+        Assert.Equal(2, exitCode);
+        Assert.Contains("someone-elses-skill", await File.ReadAllTextAsync(path));
+
+        (exitCode, _, _, _) = await Member(null, "skill", "install", "--dir", Path.Combine(_dir, "custom"), "--force");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("name: member", await File.ReadAllTextAsync(path));
+    }
+
+    [Fact]
+    public async Task Skill_show_prints_the_embedded_skill()
+    {
+        var (exitCode, _, stdout, _) = await MemberRaw("skill", "show");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "SKILL.md")).ReplaceLineEndings("\n"), stdout);
+    }
+
+    private async Task<(int, string, string, string)> MemberRaw(params string[] args)
+    {
+        var stdout = new StringWriter();
+        var stderr = new StringWriter();
+        var exitCode = await Program.Run(args, stdout, stderr, new StringReader(""), new CliEnvironment { HomeDirectory = _dir });
+        return (exitCode, "", stdout.ToString(), stderr.ToString());
     }
 }

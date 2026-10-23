@@ -23,6 +23,7 @@
     <ProjectReference Include="../Activout.MemberData/Activout.MemberData.csproj" />
     <InternalsVisibleTo Include="Activout.MemberData.Cli.Tests" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <EmbeddedResource Include="../../skills/member/SKILL.md" LogicalName="SKILL.md" />
   </ItemGroup>
 
 </Project>

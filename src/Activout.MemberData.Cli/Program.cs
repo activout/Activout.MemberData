@@ -16,7 +16,10 @@ public sealed record CliEnvironment
     public bool OutputRedirected { get; init; } = Console.IsOutputRedirected;
     public bool InputRedirected { get; init; } = Console.IsInputRedirected;
     public TimeProvider Time { get; init; } = TimeProvider.System;
+    public string HomeDirectory { get; init; } = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 }
+
+public sealed record SkillInstall(string Path, string Status);
 
 public static class Program
 {
@@ -86,7 +89,7 @@ internal sealed class App
             """)
         {
             _database, _format, _credentialSource,
-            AuthCommand(), DomainsCommand(), SyncCommand(), DataCommand(), DatabaseCommand(),
+            AuthCommand(), DomainsCommand(), SyncCommand(), DataCommand(), DatabaseCommand(), SkillCommand(),
         };
     }
 
@@ -480,6 +483,87 @@ internal sealed class App
         }));
 
         return new Command("database", "The local database.") { info, purge };
+    }
+
+    // skill
+
+    private Command SkillCommand()
+    {
+        var target = new Option<string>("--target")
+        {
+            Description = "claude (~/.claude/skills: Claude Code), agents (~/.agents/skills: Codex, Gemini CLI, " +
+                          "GitHub Copilot, OpenCode) or all",
+            DefaultValueFactory = _ => "all",
+        };
+        target.AcceptOnlyFromAmong("all", "claude", "agents");
+        var dir = new Option<string?>("--dir") { Description = "Install into this skills directory instead (a member/ folder is created in it)" };
+        var force = new Option<bool>("--force") { Description = "Overwrite a member/SKILL.md that was not written by member" };
+        var install = new Command("install", """
+            Install the agent skill that teaches coding agents to use member (offline first, JSON, ask before
+            syncing). Writes member/SKILL.md into each target's user-level skills directory; running it again
+            updates the skill to this version.
+            Examples:
+              member skill install
+              member skill install --target claude
+              member skill install --dir ./.agents/skills
+            """) { target, dir, force };
+        install.SetAction((p, ct) => Execute(p, async output =>
+        {
+            var directories = p.GetValue(dir) is { } d
+                ? [Path.GetFullPath(d)]
+                : p.GetValue(target) switch
+                {
+                    "claude" => [Path.Combine(_env.HomeDirectory, ".claude", "skills")],
+                    "agents" => [Path.Combine(_env.HomeDirectory, ".agents", "skills")],
+                    _ => new[] { Path.Combine(_env.HomeDirectory, ".claude", "skills"), Path.Combine(_env.HomeDirectory, ".agents", "skills") },
+                };
+            var skill = Skill();
+            var results = new List<SkillInstall>();
+            foreach (var directory in directories)
+            {
+                var path = Path.Combine(directory, "member", "SKILL.md");
+                string status;
+                if (!File.Exists(path))
+                {
+                    status = "created";
+                }
+                else
+                {
+                    var existing = await File.ReadAllTextAsync(path, ct);
+                    if (existing == skill) status = "unchanged";
+                    else if (existing.Contains("\nname: member\n") || p.GetValue(force)) status = "updated";
+                    else throw new MemberUsageException($"{path} exists and was not written by member; use --force to replace it");
+                }
+
+                if (status != "unchanged")
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    await File.WriteAllTextAsync(path, skill, ct);
+                }
+
+                results.Add(new SkillInstall(path, status));
+            }
+
+            output.Result(results, () => output.Table(["SKILL", "STATUS"],
+                results.Select(r => new[] { r.Path, r.Status })));
+            return ExitCodes.Success;
+        }));
+
+        var show = new Command("show", "Print the agent skill (SKILL.md) for agents with other skill locations.");
+        show.SetAction((_, _) =>
+        {
+            _stdout.Write(Skill());
+            return Task.FromResult(ExitCodes.Success);
+        });
+
+        return new Command("skill", "The agent skill for Claude Code, Codex and other coding agents.") { install, show };
+    }
+
+    internal static string Skill()
+    {
+        using var stream = typeof(App).Assembly.GetManifestResourceStream("SKILL.md")!;
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd().ReplaceLineEndings("\n");
     }
 
     // Helpers

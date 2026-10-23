@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Include="../../examples/synthetic-fixtures/*.json" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../skills/member/SKILL.md" Link="SKILL.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

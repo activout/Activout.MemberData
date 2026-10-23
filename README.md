@@ -96,6 +96,7 @@ dotnet tool install --global Activout.MemberData.Cli
 | `member data query "SELECT …" \| --file q.sql [--max-rows N] [--timeout S]` | Read-only SQL (offline) |
 | `member database info` | Path, schema, member binding, counts |
 | `member database purge --yes` | Delete the local database |
+| `member skill install [--target all\|claude\|agents] [--dir D]` / `member skill show` | Install or print the coding-agent skill |
 
 Global options are `--database PATH`, `--format json|table` and `--credential-source keychain|environment`. Output is
 one JSON document on stdout when stdout is redirected (or with `--format json`), and progress goes to stderr.
@@ -104,8 +105,23 @@ Exit codes are listed in [docs/troubleshooting.md](docs/troubleshooting.md).
 ## Using it from a coding agent
 
 [`skills/member/SKILL.md`](skills/member/SKILL.md) teaches agents to answer questions about your LinkedIn data with
-`member`: offline first, JSON output, SQL over `snapshot_records`, asking before syncing. Install it for Claude Code
-with `ln -s "$PWD/skills/member" ~/.claude/skills/member`.
+`member`: offline first, JSON output, SQL over `snapshot_records`, asking before syncing. The skill is built into
+`member`, so installing it needs no repository checkout:
+
+```sh
+member skill install                  # both locations below
+member skill install --target claude  # only ~/.claude/skills (Claude Code)
+member skill install --dir ./.agents/skills   # a project's skills directory, or any other location
+member skill show                     # print SKILL.md, e.g. for an agent with another skills folder
+```
+
+| Target | Directory | Read by |
+| --- | --- | --- |
+| `claude` | `~/.claude/skills/member/` | Claude Code (also GitHub Copilot and OpenCode) |
+| `agents` | `~/.agents/skills/member/` | Codex (documented user location), and per their docs also Gemini CLI, GitHub Copilot and OpenCode |
+
+Running `member skill install` again after an upgrade updates the skill. It refuses to overwrite a
+`member/SKILL.md` it didn't write unless you add `--force`.
 
 Your database contains messages and information about other people. An agent that reads it sends what it reads to
 its model provider. Decide which data you let it see, and don't publish what you get back.
