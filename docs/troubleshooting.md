@@ -22,6 +22,10 @@ progress and warnings go to stderr.
 
 ## Common problems
 
+**Token generator: "We can’t verify the authenticity of your request because the state parameter was
+modified."** A browser extension, often a password manager, altered the sign-in redirect. Disable it for the page,
+or generate the token in a private/incognito window without extensions ([dma-setup.md](dma-setup.md#3-generate-a-token)).
+
 **`No access token; run 'member auth import-token'`.** You haven't imported a token, or you're running as another
 user, or with another credential source than when you imported it.
 

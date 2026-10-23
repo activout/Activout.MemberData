@@ -27,6 +27,11 @@ the terms. Access is granted immediately.
 4. Copy the access token. The token details show its expiry, which was **12 months** for the live test token.
    Write it down, because `member` cannot find it out later.
 
+If step 3 fails with **"Oops. We can’t verify the authenticity of your request because the state parameter was
+modified."**, a browser extension (often a password manager) has interfered with the sign-in redirect. Turn off
+your password manager for the page, or generate the token in a private/incognito window with no extensions, then
+start again from step 1 of this section.
+
 Consenting also starts LinkedIn's archiving. Snapshot data for some domains takes minutes or longer to appear, and
 changelog events are only recorded from now on.
 
