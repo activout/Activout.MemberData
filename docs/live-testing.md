@@ -32,7 +32,7 @@ text, URLs, emails, ids or tokens.
 | API | `api.linkedin.com/rest`, `Linkedin-Version: 202312` |
 | Scope | `r_dma_portability_self_serve` (from the OAuth Token Generator); `memberComplianceScopes: ["DMA"]` |
 | Credential source | macOS Keychain, imported through stdin |
-| Token expiry | **Unknown.** Not shown in API responses; not recorded at import |
+| Token expiry | 2027-10-23 13:21:35 UTC (12 months, 3-legged), from the developer portal's token details; recorded with `--expires-at` |
 
 ### Results
 
@@ -110,7 +110,7 @@ are kept as separate rows with `-2`, `-3`, … keys.
 - The 28-day gap, the 21-day warning and recovery were tested offline with a simulated clock; they cannot be
   observed live in one session.
 - Snapshot tombstoning after a real deletion on LinkedIn was not observed live (offline test only).
-- Token expiry and the 401 path were tested offline only.
+- Expiry handling and the 401 path were tested offline only; the live token will not expire until 2027-10-23.
 
 ### Fixtures
 

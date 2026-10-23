@@ -24,7 +24,8 @@ the terms. Access is granted immediately.
    Tools), click **Create token** and select your app.
 2. Select the scope **`r_dma_portability_self_serve`** and click **Request access token**.
 3. Sign in to LinkedIn if asked, read the consent text and click **Allow**.
-4. Copy the access token. Write down the lifetime the page shows, because `member` cannot find it out later.
+4. Copy the access token. The token details show its expiry, which was **12 months** for the live test token.
+   Write it down, because `member` cannot find it out later.
 
 Consenting also starts LinkedIn's archiving. Snapshot data for some domains takes minutes or longer to appear, and
 changelog events are only recorded from now on.
@@ -32,14 +33,14 @@ changelog events are only recorded from now on.
 ## 4. Give the token to `member`
 
 ```sh
-member auth import-token --expires-in-days 60   # paste at the hidden prompt; use the lifetime shown
+member auth import-token --expires-in-days 365  # paste at the hidden prompt; use the lifetime shown
 ```
 
 or, from the clipboard without the token ever appearing on screen or in shell history:
 
 ```sh
-pbpaste | member auth import-token --stdin --expires-in-days 60                    # macOS
-Get-Clipboard | member auth import-token --stdin --expires-in-days 60              # Windows PowerShell
+pbpaste | member auth import-token --stdin --expires-in-days 365                   # macOS
+Get-Clipboard | member auth import-token --stdin --expires-in-days 365             # Windows PowerShell
 ```
 
 `import-token` checks the token with LinkedIn before storing it. Never pass the token as a command argument, and
@@ -68,6 +69,6 @@ accept the risk of environment variables instead (see [security-and-privacy.md](
 ```sh
 export MEMBERDATA_CREDENTIAL_SOURCE=environment
 export MEMBERDATA_ACCESS_TOKEN=…            # from a secrets manager, not from shell history
-export MEMBERDATA_TOKEN_EXPIRES_AT=2026-12-22T00:00:00Z   # optional
+export MEMBERDATA_TOKEN_EXPIRES_AT=2027-10-23T00:00:00Z   # optional
 member sync
 ```

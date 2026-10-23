@@ -32,11 +32,14 @@ Sources:
   `member` therefore only imports tokens; there is no `member auth login`, because no browser callback flow is
   documented for this product.
 - **Eligibility:** EEA and Swiss members only.
-- **Token lifetime and refresh: unresolved.** The Member DMA pages do not state a lifetime or mention refresh
-  tokens, and API responses carry no expiry information. Token introspection would need the app's client secret,
-  which `member` does not handle. `member auth import-token --expires-in-days N` records the lifetime the token
-  generator shows. When LinkedIn rejects the token (401), `member` asks for a new one and never pretends to
-  refresh. It is unverified whether the lifetime is 60 days (typical for LinkedIn 3-legged tokens) or 12 months.
+- **Token lifetime: 12 months (verified).** The Member DMA pages do not state a lifetime, and API responses carry
+  no expiry. The developer portal's token details for the live test token showed: authentication type 3-legged,
+  permission `r_dma_portability_self_serve`, created 2026-10-23 13:21:32 UTC, expires 2027-10-23 13:21:35 UTC
+  ("in 12 months"). `member auth import-token --expires-at` (or `--expires-in-days 365`) records it, and
+  `member auth status` reports it.
+- **Refresh: none documented.** The token generator issues no refresh token. When LinkedIn rejects the token (401)
+  or the recorded expiry passes, `member` asks the owner to generate and import a new one; it never pretends to
+  refresh. Whether re-consent also restarts the 28-day changelog window is unverified.
 
 ## Member Authorization Management
 
@@ -94,7 +97,7 @@ didn't appear, which tells "no data" apart from "unsupported". See [storage-and-
 
 ## Unresolved
 
-- Token lifetime and refresh (above).
+- Refresh and re-consent behaviour (above).
 - Rate limits: none published. `member` retries 429 and 5xx with backoff and honours `Retry-After`.
 - Whether snapshot data for the slower domains (`ALL_COMMENTS`, `MEMBER_SHARE_INFO`, `SEARCHES` and others that
   returned 404 on the day of consent) appears later. `member` reports them as `no_data` and probes them on every

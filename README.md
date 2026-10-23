@@ -59,7 +59,7 @@ activout/Activout.MemberData`.
 With the [.NET 10 SDK](https://dotnet.microsoft.com/download):
 
 ```sh
-dotnet tool install --global Activout.MemberData.Cli --prerelease
+dotnet tool install --global Activout.MemberData.Cli
 ```
 
 ## Quick start
@@ -68,7 +68,7 @@ dotnet tool install --global Activout.MemberData.Cli --prerelease
 2. Store the token in your operating system's secure store. It is read from a hidden prompt or stdin, never from
    command arguments:
    ```sh
-   member auth import-token --expires-in-days 60   # use the lifetime LinkedIn's token generator shows
+   member auth import-token --expires-in-days 365  # LinkedIn's DMA tokens last 12 months
    member auth status
    ```
 3. Synchronise. The first run downloads every snapshot domain (about a minute for a large account):
@@ -131,8 +131,7 @@ dotnet publish src/Activout.MemberData.Cli -c Release -r osx-arm64 --self-contai
 
 ## Releasing
 
-Push a tag such as `v0.1.0-rc.1`. While Activout.DatabaseClient is a release candidate, only prerelease tags can pack
-(NuGet refuses a stable package with a prerelease dependency). The Publish workflow tests, packs, builds the three
+Push a tag such as `v0.1.0` (or `v0.1.0-rc.1` for a prerelease). The Publish workflow tests, packs, builds the three
 single-file executables on their own operating systems, attests build provenance, pushes both packages to NuGet.org
 via trusted publishing and creates the GitHub release with the executables and `SHA256SUMS`.
 

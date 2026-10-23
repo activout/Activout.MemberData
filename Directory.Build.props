@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <!-- Local builds only; releases take the version from the tag. Prerelease while Activout.DatabaseClient is. -->
+    <!-- Local builds only; releases take the version from the tag. -->
     <Version>0.1.0-dev</Version>
     <Authors>Activout AB</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
