@@ -588,6 +588,22 @@ public class CliTests : IDisposable
     }
 
     [Fact]
+    public async Task Skill_install_leaves_a_symlinked_skill_alone()
+    {
+        var checkout = Path.Combine(_dir, "checkout", "member");
+        Directory.CreateDirectory(checkout);
+        await File.WriteAllTextAsync(Path.Combine(checkout, "SKILL.md"), "---\nname: member\ndescription: working copy\n---\n");
+        Directory.CreateDirectory(Path.Combine(_dir, ".claude", "skills"));
+        Directory.CreateSymbolicLink(Path.Combine(_dir, ".claude", "skills", "member"), checkout);
+
+        var (exitCode, json, _, _) = await Member(null, "skill", "install", "--target", "claude");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("linked", json.GetProperty("result")[0].GetProperty("status").GetString());
+        Assert.Contains("working copy", await File.ReadAllTextAsync(Path.Combine(checkout, "SKILL.md")));
+    }
+
+    [Fact]
     public async Task Skill_show_prints_the_embedded_skill()
     {
         var (exitCode, _, stdout, _) = await MemberRaw("skill", "show");

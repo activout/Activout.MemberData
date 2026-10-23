@@ -121,7 +121,9 @@ member skill show                     # print SKILL.md, e.g. for an agent with a
 | `agents` | `~/.agents/skills/member/` | Codex (documented user location), and per their docs also Gemini CLI, GitHub Copilot and OpenCode |
 
 Running `member skill install` again after an upgrade updates the skill. It refuses to overwrite a
-`member/SKILL.md` it didn't write unless you add `--force`.
+`member/SKILL.md` it didn't write unless you add `--force`, and it leaves a symlinked `member` folder alone. When
+working on this repository, link instead of installing:
+`ln -s "$PWD/skills/member" ~/.claude/skills/member && ln -s "$PWD/skills/member" ~/.agents/skills/member`.
 
 Your database contains messages and information about other people. An agent that reads it sends what it reads to
 its model provider. Decide which data you let it see, and don't publish what you get back.

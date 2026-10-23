@@ -523,7 +523,12 @@ internal sealed class App
             {
                 var path = Path.Combine(directory, "member", "SKILL.md");
                 string status;
-                if (!File.Exists(path))
+                if (new DirectoryInfo(Path.GetDirectoryName(path)!).LinkTarget != null)
+                {
+                    // A developer's symlink to a checkout: writing through it would overwrite the repository's file.
+                    status = "linked";
+                }
+                else if (!File.Exists(path))
                 {
                     status = "created";
                 }
@@ -535,7 +540,7 @@ internal sealed class App
                     else throw new MemberUsageException($"{path} exists and was not written by member; use --force to replace it");
                 }
 
-                if (status != "unchanged")
+                if (status is "created" or "updated")
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                     await File.WriteAllTextAsync(path, skill, ct);
