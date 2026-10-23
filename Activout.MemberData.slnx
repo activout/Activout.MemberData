@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Activout.MemberData.Cli/Activout.MemberData.Cli.csproj" />
+    <Project Path="src/Activout.MemberData/Activout.MemberData.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Activout.MemberData.Cli.Tests/Activout.MemberData.Cli.Tests.csproj" />
+    <Project Path="tests/Activout.MemberData.Tests/Activout.MemberData.Tests.csproj" />
+  </Folder>
+</Solution>

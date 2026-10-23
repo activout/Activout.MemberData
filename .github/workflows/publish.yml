@@ -1,0 +1,123 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  # Self-contained single-file executables: no .NET installation needed. Each is built on its own OS so the macOS
+  # binary gets the ad-hoc signature Apple Silicon requires. They are not code signed (see README).
+  binaries:
+    strategy:
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64, file: member.exe, asset: member-win-x64.exe }
+          - { os: macos-latest, rid: osx-arm64, file: member, asset: member-osx-arm64.tar.gz }
+          - { os: ubuntu-latest, rid: linux-x64, file: member, asset: member-linux-x64.tar.gz }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish
+        shell: bash
+        run: |
+          dotnet publish src/Activout.MemberData.Cli -c Release -r ${{ matrix.rid }} -o out \
+            --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version="${GITHUB_REF_NAME#v}"
+          ./out/${{ matrix.file }} --version
+          mkdir dist
+          if [ "${{ matrix.file }}" = "member.exe" ]; then
+            cp out/member.exe dist/${{ matrix.asset }}
+          else
+            tar -czf dist/${{ matrix.asset }} -C out member
+          fi
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-${{ matrix.rid }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+      id-token: write # GitHub OIDC token for NuGet trusted publishing and provenance attestations
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      # Version from the tag, applied at build time so `member --version` and assembly versions match the package.
+      - name: Build
+        run: dotnet build --configuration Release --no-restore -p:Version="${GITHUB_REF_NAME#v}"
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
+      - name: Pack
+        run: |
+          dotnet pack \
+            --configuration Release --no-build \
+            -p:Version="${GITHUB_REF_NAME#v}" \
+            -o artifacts
+
+      - name: Download binaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: binary-*
+          path: binaries
+          merge-multiple: true
+
+      - name: Checksums
+        run: cd binaries && sha256sum * > SHA256SUMS
+
+      # Keyless Sigstore provenance; verify with: gh attestation verify <file> -R activout/Activout.MemberData
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            binaries/member-*
+
+      # Exchange the OIDC token for a short-lived (1 hour) API key right before pushing.
+      - name: NuGet login (trusted publishing)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      # Created last, so the release page only appears once the packages are on NuGet.
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            binaries/*
