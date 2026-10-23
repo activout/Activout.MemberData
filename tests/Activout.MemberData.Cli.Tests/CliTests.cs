@@ -541,6 +541,17 @@ public class CliTests : IDisposable
     }
 
     [Fact]
+    public async Task No_arguments_show_help()
+    {
+        var (exitCode, _, stdout, stderr) = await MemberRaw();
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Usage:", stdout);
+        Assert.Contains("sync", stdout);
+        Assert.Equal("", stderr);
+    }
+
+    [Fact]
     public async Task Invalid_arguments_exit_with_usage()
     {
         var (exitCode, _, _, stderr) = await Member(null, "sync", "--no-such-option");

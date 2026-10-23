@@ -31,7 +31,8 @@ public static class Program
         CliEnvironment env, CancellationToken ct = default)
     {
         var app = new App(stdout, stderr, stdin, env);
-        var parseResult = app.Root.Parse(args);
+        // Bare `member` shows the help instead of a "Required command" error.
+        var parseResult = app.Root.Parse(args.Length == 0 ? ["--help"] : args);
         if (parseResult.Errors.Count > 0)
         {
             foreach (var error in parseResult.Errors) stderr.WriteLine($"member: {error.Message}");
