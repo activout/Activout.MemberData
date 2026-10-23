@@ -50,6 +50,11 @@ Common keys:
 | `POSITIONS` | `Company Name`, `Title`, `Description`, `Location`, `Started On`, `Finished On` |
 | `COMPANY_FOLLOWS` | `Organization`, `Followed On` |
 | `ENDORSEMENTS` | `Skill Name`, `Endorsement Date`, `Endorsement Status`, endorser/endorsee names and URLs |
+| `RECOMMENDATIONS` | `First Name`, `Last Name`, `Company`, `Job Title`, `Text`, `Creation Date` (`MM/DD/YY, HH:MM AM`), `Status` |
+
+`RECOMMENDATIONS` mixes given and received recommendations. `Status` tells them apart: `VISIBLE` means received
+(the name is the author), an empty `Status` means given (the name is the person recommended). Don't guess the
+direction from whether the text mentions the user's name.
 
 Changelog events (likes, comments, messages and so on after the user consented, kept for 28 days by LinkedIn) live
 in `changelog_events`: `resource_name`, `method`, `activity_status`, `captured_at` and `processed_at` (epoch ms),
