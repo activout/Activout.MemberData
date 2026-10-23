@@ -163,6 +163,16 @@ The download above suits most people. One of these may fit you better:
   gives typed access to the Member Snapshot, Changelog and Authorization APIs with raw JSON preserved and no
   database, for building your own program.
 
+Other open-source projects use the same LinkedIn API. They are not part of this project, and we haven't reviewed
+them:
+
+- **[Unlinked](https://github.com/larsbaunwall/Unlinked):** an MCP server that brings your LinkedIn profile and work
+  history into AI assistants such as Claude Desktop and GitHub Copilot.
+- **[People Memory](https://github.com/michelgrolet/people-memory-mcp):** a private graph of the people you know, in
+  your own PostgreSQL database, with an MCP server and importers for LinkedIn, contacts and more.
+- **[LinkedIn Evidence MCP](https://github.com/victoryotzev/linkedin-mcp):** turns your CV, documents and LinkedIn
+  data into verified claims, profile suggestions and post drafts, with an MCP server and a review dashboard.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
