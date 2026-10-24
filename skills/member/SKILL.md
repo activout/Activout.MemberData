@@ -51,6 +51,11 @@ Common keys:
 | `COMPANY_FOLLOWS` | `Organization`, `Followed On` |
 | `ENDORSEMENTS` | `Skill Name`, `Endorsement Date`, `Endorsement Status`, endorser/endorsee names and URLs |
 | `RECOMMENDATIONS` | `First Name`, `Last Name`, `Company`, `Job Title`, `Text`, `Creation Date` (`MM/DD/YY, HH:MM AM`), `Status` |
+| `MEMBER_SHARE_INFO` | `Date` (`YYYY-MM-DD HH:MM:SS`), `ShareCommentary`, `ShareLink`, `SharedUrl`, `MediaUrl`, `Visibility` |
+
+`MEMBER_SHARE_INFO` holds the user's own posts (the name doesn't make that obvious). Group by `ShareLink`, because
+the same post can appear more than once. `INSTANT_REPOSTS` holds reposts without the user's own text. `ARTICLES` holds
+only long-form articles, stored as one record per HTML line, so its record count doesn't count articles.
 
 `RECOMMENDATIONS` mixes given and received recommendations. `Status` tells them apart: `VISIBLE` means received
 (the name is the author), an empty `Status` means given (the name is the person recommended). Don't guess the
