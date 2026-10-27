@@ -440,7 +440,7 @@ internal sealed class App
 
     private Command DatabaseCommand()
     {
-        var info = new Command("info", "Path, schema version, member binding and record counts (offline).");
+        var info = new Command("info", "Path, size, schema version, member binding and record counts (offline).");
         info.SetAction((p, _) => Execute(p, async output =>
         {
             using var database = await OpenDatabase(p);
@@ -460,6 +460,8 @@ internal sealed class App
             output.Result(result, () =>
             {
                 output.Out.WriteLine($"Path:             {result.path}");
+                output.Out.WriteLine(string.Create(CultureInfo.InvariantCulture,
+                    $"Size:             {result.size_bytes / 1048576.0:F1} MiB ({result.size_bytes} bytes)"));
                 output.Out.WriteLine($"Schema version:   {result.schema_version}");
                 output.Out.WriteLine($"Member:           {result.member ?? "- (not bound until the first sync)"}");
                 output.Out.WriteLine($"Snapshot records: {result.snapshot_records} in {result.domains_with_records} domains ({result.deleted_snapshot_records} deleted)");
