@@ -93,7 +93,7 @@ That's all most people need. The rest of this page is reference.
 | `member data list [--domain D] [--limit N] [--offset N] [--include-deleted]` | Stored snapshot records (offline) |
 | `member data get --domain D --id KEY` | One record (offline) |
 | `member data query "SELECT …" \| --file q.sql [--max-rows N] [--timeout S]` | Read-only SQL (offline) |
-| `member database info` | Path, schema, member binding, counts |
+| `member database info` | Path, size, schema, member binding, counts |
 | `member database purge --yes` | Delete the local database |
 | `member skill install [--target all\|claude\|agents] [--dir D]` / `member skill show` | Install or print the coding-agent skill |
 

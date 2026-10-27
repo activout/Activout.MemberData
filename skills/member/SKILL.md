@@ -29,7 +29,7 @@ contact LinkedIn.
 
 ```sh
 member domains list --format json      # domain, status (synced/no_data/not_returned/unsupported), records, last_success_at
-member database info --format json     # member, record and event counts
+member database info --format json     # path, size, member, record and event counts
 ```
 
 Snapshot data lives in `snapshot_records` (one row per record, raw JSON in `json`, `deleted_at` set when LinkedIn
