@@ -1,5 +1,7 @@
 # Activout.MemberData
 
+> **Proof of concept.** This is an experiment, not a supported product. It may change or stop working without notice.
+
 > **Just want to ask your AI about your LinkedIn data? Use [MemberData.eu](https://memberdata.eu/).**
 >
 > This repository is the open-source command-line tool for technical users: you create your own LinkedIn developer
