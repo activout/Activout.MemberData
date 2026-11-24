@@ -503,7 +503,7 @@ public class CliTests : IDisposable
         StoreToken();
         await Member(Api_(), "sync");
         var file = Path.Combine(_dir, "overview.sql");
-        await File.WriteAllTextAsync(file, "SELECT domain, count(*) AS n FROM snapshot_records GROUP BY domain ORDER BY domain;\n");
+        await File.WriteAllTextAsync(file, "SELECT domain, count(*) AS n FROM snapshot_records GROUP BY domain ORDER BY domain;\n", TestContext.Current.CancellationToken);
 
         var (exitCode, json, _, _) = await Member(null, "data", "query", "--file", file);
 
@@ -532,7 +532,7 @@ public class CliTests : IDisposable
     [Fact]
     public async Task Corrupt_database_is_reported()
     {
-        await File.WriteAllTextAsync(Database, "this is not an SQLite database, just synthetic junk text padding......");
+        await File.WriteAllTextAsync(Database, "this is not an SQLite database, just synthetic junk text padding......", TestContext.Current.CancellationToken);
 
         var (exitCode, json, _, _) = await Member(null, "database", "info");
 
@@ -575,13 +575,13 @@ public class CliTests : IDisposable
         Assert.Equal(["created", "created"], json.GetProperty("result").EnumerateArray().Select(r => r.GetProperty("status").GetString()));
         var claude = Path.Combine(_dir, ".claude", "skills", "member", "SKILL.md");
         var agents = Path.Combine(_dir, ".agents", "skills", "member", "SKILL.md");
-        Assert.StartsWith("---\nname: member\n", await File.ReadAllTextAsync(claude));
-        Assert.Equal(await File.ReadAllTextAsync(claude), await File.ReadAllTextAsync(agents));
+        Assert.StartsWith("---\nname: member\n", await File.ReadAllTextAsync(claude, TestContext.Current.CancellationToken));
+        Assert.Equal(await File.ReadAllTextAsync(claude, TestContext.Current.CancellationToken), await File.ReadAllTextAsync(agents, TestContext.Current.CancellationToken));
 
         (_, json, _, _) = await Member(null, "skill", "install");
         Assert.All(json.GetProperty("result").EnumerateArray(), r => Assert.Equal("unchanged", r.GetProperty("status").GetString()));
 
-        await File.WriteAllTextAsync(claude, "---\nname: member\ndescription: old version\n---\n");
+        await File.WriteAllTextAsync(claude, "---\nname: member\ndescription: old version\n---\n", TestContext.Current.CancellationToken);
         (_, json, _, _) = await Member(null, "skill", "install", "--target", "claude");
         Assert.Equal("updated", json.GetProperty("result")[0].GetProperty("status").GetString());
     }
@@ -591,15 +591,15 @@ public class CliTests : IDisposable
     {
         var path = Path.Combine(_dir, "custom", "member", "SKILL.md");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await File.WriteAllTextAsync(path, "---\nname: someone-elses-skill\n---\n");
+        await File.WriteAllTextAsync(path, "---\nname: someone-elses-skill\n---\n", TestContext.Current.CancellationToken);
 
         var (exitCode, _, _, _) = await Member(null, "skill", "install", "--dir", Path.Combine(_dir, "custom"));
         Assert.Equal(2, exitCode);
-        Assert.Contains("someone-elses-skill", await File.ReadAllTextAsync(path));
+        Assert.Contains("someone-elses-skill", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
 
         (exitCode, _, _, _) = await Member(null, "skill", "install", "--dir", Path.Combine(_dir, "custom"), "--force");
         Assert.Equal(0, exitCode);
-        Assert.Contains("name: member", await File.ReadAllTextAsync(path));
+        Assert.Contains("name: member", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -607,7 +607,7 @@ public class CliTests : IDisposable
     {
         var checkout = Path.Combine(_dir, "checkout", "member");
         Directory.CreateDirectory(checkout);
-        await File.WriteAllTextAsync(Path.Combine(checkout, "SKILL.md"), "---\nname: member\ndescription: working copy\n---\n");
+        await File.WriteAllTextAsync(Path.Combine(checkout, "SKILL.md"), "---\nname: member\ndescription: working copy\n---\n", TestContext.Current.CancellationToken);
         Directory.CreateDirectory(Path.Combine(_dir, ".claude", "skills"));
         Directory.CreateSymbolicLink(Path.Combine(_dir, ".claude", "skills", "member"), checkout);
 
@@ -615,7 +615,7 @@ public class CliTests : IDisposable
 
         Assert.Equal(0, exitCode);
         Assert.Equal("linked", json.GetProperty("result")[0].GetProperty("status").GetString());
-        Assert.Contains("working copy", await File.ReadAllTextAsync(Path.Combine(checkout, "SKILL.md")));
+        Assert.Contains("working copy", await File.ReadAllTextAsync(Path.Combine(checkout, "SKILL.md"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
